@@ -172,7 +172,7 @@ npm install
 #### Environment Configuration
 Create `.env` file in `social_react` directory:
 ```env
-VITE_API_URL=http://localhost:8000/api
+VITE_API_URL=https://luckymillion.pro/api
 VITE_APP_NAME="Social App"
 ```
 
@@ -184,7 +184,7 @@ npm run dev
 ### 4. Access the Application
 - **Backend API**: http://localhost:8000
 - **Frontend App**: http://localhost:5173
-- **API Documentation**: http://localhost:8000/api/documentation
+- **API Documentation**: https://luckymillion.pro/api/documentation
 
 ## 📱 Mobile-First Design Features
 

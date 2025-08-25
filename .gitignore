@@ -19,6 +19,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/social_react
 Homestead.json
 Homestead.yaml
 Thumbs.db

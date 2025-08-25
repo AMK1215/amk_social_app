@@ -92,7 +92,7 @@ npm install laravel-echo pusher-js
 Create a `.env` file in the `social_react` directory:
 ```env
 VITE_APP_NAME="Social App"
-VITE_API_URL=http://localhost:8000/api
+VITE_API_URL=https://luckymillion.pro/api
 VITE_REVERB_APP_KEY=rtk5ssu7lwwd90gwtdou
 VITE_REVERB_HOST=localhost
 VITE_REVERB_PORT=8080

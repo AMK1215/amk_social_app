@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance
 export const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'https://luckymillion.pro/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
