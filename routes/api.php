@@ -43,6 +43,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/posts/clean-external-urls', [PostController::class, 'cleanExternalUrls']);
     Route::post('/posts/convert-to-full-urls', [PostController::class, 'convertToFullUrls']);
     
+    // Comments
+    Route::get('/posts/{post}/comments', [PostController::class, 'comments']);
+    Route::post('/posts/{post}/comments', [PostController::class, 'storeComment']);
+    Route::put('/comments/{comment}', [PostController::class, 'updateComment']);
+    Route::delete('/comments/{comment}', [PostController::class, 'deleteComment']);
+    Route::post('/comments/{comment}/like', [PostController::class, 'likeComment']);
+    
     // Profiles
     Route::get('/profiles', [ProfileController::class, 'index']);
     Route::get('/profiles/{user}', [ProfileController::class, 'show']);

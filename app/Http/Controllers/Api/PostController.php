@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\Like;
+use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -268,6 +269,153 @@ class PostController extends Controller
             'success' => true,
             'message' => "Converted {$convertedCount} post(s) to use full URLs",
             'data' => ['converted_count' => $convertedCount]
+        ]);
+    }
+
+    /**
+     * Get comments for a post
+     */
+    public function comments(Request $request, Post $post)
+    {
+        $comments = $post->comments()
+            ->with(['user.profile', 'likes', 'replies.user.profile', 'replies.likes'])
+            ->latest()
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $comments
+        ]);
+    }
+
+    /**
+     * Store a new comment
+     */
+    public function storeComment(Request $request, Post $post)
+    {
+        $validator = Validator::make($request->all(), [
+            'content' => 'required|string|max:1000',
+            'parent_id' => 'nullable|exists:comments,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $comment = $post->comments()->create([
+            'user_id' => $request->user()->id,
+            'content' => $request->content,
+            'parent_id' => $request->parent_id,
+        ]);
+
+        $comment->load(['user.profile', 'likes']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment added successfully',
+            'data' => $comment
+        ]);
+    }
+
+    /**
+     * Update a comment
+     */
+    public function updateComment(Request $request, $commentId)
+    {
+        $comment = Comment::findOrFail($commentId);
+
+        // Check if user owns the comment
+        if ($comment->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'content' => 'required|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $comment->update([
+            'content' => $request->content,
+            'is_edited' => true,
+            'edited_at' => now(),
+        ]);
+
+        $comment->load(['user.profile', 'likes']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment updated successfully',
+            'data' => $comment
+        ]);
+    }
+
+    /**
+     * Delete a comment
+     */
+    public function deleteComment(Request $request, $commentId)
+    {
+        $comment = Comment::findOrFail($commentId);
+
+        // Check if user owns the comment or the post
+        if ($comment->user_id !== $request->user()->id && $comment->post->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $comment->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment deleted successfully'
+        ]);
+    }
+
+    /**
+     * Like/unlike a comment
+     */
+    public function likeComment(Request $request, $commentId)
+    {
+        $comment = Comment::findOrFail($commentId);
+
+        $existingLike = Like::where('user_id', $request->user()->id)
+                            ->where('comment_id', $comment->id)
+                            ->first();
+
+        if ($existingLike) {
+            $existingLike->delete();
+            $message = 'Comment unliked';
+        } else {
+            Like::create([
+                'user_id' => $request->user()->id,
+                'comment_id' => $comment->id,
+                'type' => $request->type ?? 'like',
+            ]);
+            $message = 'Comment liked';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => [
+                'liked' => !$existingLike,
+                'like_count' => $comment->fresh()->like_count
+            ]
         ]);
     }
 }
